@@ -1,0 +1,29 @@
+@HD	VN:1.0	GO:none	SO:coordinate
+@SQ	SN:chrM	LN:16571
+@SQ	SN:chr1	LN:249250621
+@SQ	SN:chr2	LN:243199373
+@SQ	SN:chr3	LN:198022430
+@SQ	SN:chr4	LN:191154276
+@SQ	SN:chr5	LN:180915260
+@SQ	SN:chr6	LN:171115067
+@SQ	SN:chr7	LN:159138663
+@SQ	SN:chr8	LN:146364022
+@SQ	SN:chr9	LN:141213431
+@SQ	SN:chr10	LN:135534747
+@SQ	SN:chr11	LN:135006516
+@SQ	SN:chr12	LN:133851895
+@SQ	SN:chr13	LN:115169878
+@SQ	SN:chr14	LN:107349540
+@SQ	SN:chr15	LN:102531392
+@SQ	SN:chr16	LN:90354753
+@SQ	SN:chr17	LN:81195210
+@SQ	SN:chr18	LN:78077248
+@SQ	SN:chr19	LN:59128983
+@SQ	SN:chr20	LN:63025520
+@SQ	SN:chr21	LN:48129895
+@SQ	SN:chr22	LN:51304566
+@SQ	SN:chrX	LN:155270560
+@SQ	SN:chrY	LN:59373566
+@RG	ID:NA12878	SM:NA12878
+@PG	ID:bwa	PN:bwa	VN:0.6.1-r104-tpx
+@PG	ID:GATK IndelRealigner	VN:1.6-22-g3ec78bd	CL:knownAlleles=[] targetIntervals=/illumina/builds/platinumgenomes/Platinum_Genomes_Short_Insert/bwa_0.6.1_highCoverage/NA12878_200x/Data/Intensities/BaseCalls/Alignment/NA12878_S1_chrM.intervals LODThresholdForCleaning=5.0 consensusDeterminationModel=USE_READS entropyThreshold=0.15 maxReadsInMemory=150000 maxIsizeForMovement=3000 maxPositionalMoveAllowed=200 maxConsensuses=30 maxReadsForConsensuses=120 maxReadsForRealignment=20000 noOriginalAlignmentTags=false nWayOut=null generate_nWayOut_md5s=false check_early=false noPGTag=false keepPGTags=false indelsFileForDebugging=null statisticsFileForDebugging=null SNPsFileForDebugging=null

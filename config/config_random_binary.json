@@ -1,0 +1,16 @@
+{
+    "purity": 80.0,
+	"num_clones": 3,
+	"perc_majority_clone": 80.0,
+	"perc_heterogeneous_variants": 60.0,
+	"tree_format": "random_binary",
+	"tree_seed": 1,
+	"haplotyped_bam_dir": "../haplotyped_bams",
+    "bam_depth": 174,  
+	"mutate_sv": true,
+	"somatic_vcf": "somatic.snvs.vcf", 
+    "hg_file": "human.hg19.genome",
+    "output_bam_file": "sample",
+    "ploidy_depth": 60,
+    "chromosomes": "all"
+}

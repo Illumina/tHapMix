@@ -1,0 +1,13 @@
+{
+   "purity": 80.0,
+	"num_clones": 1,
+	"tree_format": "random_single_level",
+    "haplotyped_bam_dir": "../haplotyped_bams",
+    "bam_depth": 174,  
+    "mutate_sv": true,
+    "somatic_vcf": "../config/somatic.snvs.vcf", 
+    "hg_file": "../config/human.hg19.genome",
+    "output_bam_file": "example",
+    "ploidy_depth": 60,
+    "chromosomes": [21,22]
+}

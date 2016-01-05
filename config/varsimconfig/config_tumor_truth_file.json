@@ -1,0 +1,10 @@
+{
+    "num_var_min": 5,
+    "num_var_max": 5,
+    "size_var_min": 10000,
+    "size_var_max": 100000,
+    "cn_min": 0,
+    "cn_max": 2,
+    "truth_file_name": "MyTumor.bed",
+    "chromosomes": "all"
+}
