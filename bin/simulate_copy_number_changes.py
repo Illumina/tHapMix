@@ -132,7 +132,7 @@ def create_synthetic_bam(bam_file,output_bam_file,query_chr, haplotype,mutate_so
         print("qcr ",query_chr)
         h=haplotype+'_CN'
         subsample_fraction=float(ploidy_depth*region[h])/bam_depth
-        if subsample_fraction > 1:
+        if subsample_fraction > 1.1:
             sys.exit("Oversampling error: CN=%d, ploidy_depth=%d, bam_depth=%d, subsample_fraction=%f" % (region[h], ploidy_depth, bam_depth, subsample_fraction))
 
         print("region "+str(region),"pd ", str(ploidy_depth), " cn ", region[h], " ss ",subsample_fraction)
