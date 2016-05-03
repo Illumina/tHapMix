@@ -12,7 +12,7 @@ def runCanvas(bam_dirs):
 
         else:
 
-            if os.path.exists("%s/sorted_Proteus_LP6007590_LP6007591_som_var.bam.bai" % bam_dir):
+            if os.path.exists("%s/sorted_sample_som_var.bam.bai" % bam_dir):
             #         and not os.path.exists("%s/pyflow.data/active_pyflow_process.txt" % bam_dir)): # simulation is finished
 
                 print "Sim dir: " + bam_dir
@@ -37,8 +37,8 @@ def runCanvas(bam_dirs):
                                   ",,,,\n"
                                   "[Data],,,,\n"
                                   "SampleID,SampleName,MatchedNormalID,AlignmentPath,GenomeFolder\n"
-                                  "Normal,Normal,,/illumina/build/curium/builds/CNeval/PG_bams/NA12882-50x-TR2-p1_S1_30x.bam,Homo_sapiens/UCSC/hg19/Sequence/WholeGenomeFasta\n"
-                                  "Tumor,Tumor,Normal,%s/sorted_Proteus_LP6007590_LP6007591_som_var.bam,"
+                                  "Normal,Normal,,/illumina/build/CNA/DELTA/HapMix/haplotypebams/NA12878.normal.bam,Homo_sapiens/UCSC/hg19/Sequence/WholeGenomeFasta\n"
+                                  "Tumor,Tumor,Normal,%s/sorted_sample_som_var.bam,"
                                   "Homo_sapiens/UCSC/hg19/Sequence/WholeGenomeFasta" % bam_dir)
 
                 # Write bash script to launch Canvas

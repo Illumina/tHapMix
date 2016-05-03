@@ -20,7 +20,7 @@ HapMix can be used for software benchmarking, model training and in-silico analy
  
 ## License
 
-HapMix source code is provided under the [GPLv3 license] (LICENSE.txt). Manta includes several third party packages provided under other open source licenses, please see [COPYRIGHT.txt] (COPYRIGHT.txt) for additional details.
+HapMix source code is provided under the [GPLv3 license] (LICENSE.txt).
 
 ## Installation and dependencies
 Bedtools package should be installed and must be present in *PATH* environment: this could be accomplished with package managers http://bedtools.readthedocs.org/en/latest/content/installation.html . 
