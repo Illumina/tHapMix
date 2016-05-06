@@ -128,7 +128,15 @@ It is possible to regenerate your own haplotype bams by using `split_by_haplotyp
 - chromosome-level fasta genome reference: i.e., from http://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/
 - NA12882 and NA12878 200x bam files: raw fastq files for the sample are available for download from European Nucleotide Archive under the accession number ERP001775.
 
-To create haplotype bams run the follwoing command for each chromosome bam `split_by_haplotype.py [-h] -s SAMPLE_NAME -c CHR_NO -b BAM_FILE -r REF_FILE -n SNP_FILE -i INDEL_FILE  [-x CHR_PREFIX]`. For example, executing `python split_by_haplotype.py -s NA12878 -c 20 -b NA12878_chr20_small.bam -r chr20.fa -n IlluminaPlatinumSNPs-PG-staging-V4-all.vcf.gz -i IlluminaPlatinumINDELs-PG-staging-V4-all.vcf.gz` will produce haplotype bams `haplotypeC_chr20.bam` and `haplotypeD_chr20.bam`.
+To create haplotype bams run the follwoing command for each chromosome bam 
+
+```split_by_haplotype.py [-h] -s SAMPLE_NAME -c CHR_NO -b BAM_FILE -r REF_FILE -n SNP_FILE -i INDEL_FILE  [-x CHR_PREFIX]```.
+
+For example, executing 
+
+```python split_by_haplotype.py -s NA12878 -c 20 -b NA12878_chr20_small.bam -r chr20.fa -n IlluminaPlatinumSNPs-PG-staging-V4-all.vcf.gz -i IlluminaPlatinumINDELs-PG-staging-V4-all.vcf.gz```
+
+will produce haplotype bams `haplotypeC_chr20.bam` and `haplotypeD_chr20.bam`.
 
 
 ## Usage
