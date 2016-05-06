@@ -122,6 +122,14 @@ Phased Haplotype SNV and indel variants from Platinum Genomes (PG) project (http
 
 The splitting procedure generated a separate bam file for each of chromosomal haplotypes (i.e. 48 files taking a total of 300G of disk space). These can be downloaded from BaseSpace: https://basespace.illumina.com/s/Tty7T2ppH3Tr (exact folder location: https://basespace.illumina.com/analyses/30880851/files/28484471?projectId=18065049). A BaseMount command line interface for BaseSpace could be used for file downloading: details accessible from here https://basemount.basespace.illumina.com . 
 
+It is possible to regenerate your own haplotype bams by using `split_by_haplotype.py` under `scripts/haplobams/` directory. To use it install the following Python package dependencies with `pip install [packagename]: pysam, numpy, HTSeq, subprocess` and make sure HTSlib is available in the `$PATH` (follow installation instructions in http://www.htslib.org/download). Once installed, `split_by_haplotype.py` will require the following files:
+- phased SNV calls for Platinum Genome samples: available for download from HapMix release 
+- phased indel calls for Platinum Genome samples: available for download from HapMix release 
+- chromosome-level fasta genome reference: i.e., from http://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/
+- NA12882 and NA12878 200x bam files: raw fastq files for the sample are available for download from European Nucleotide Archive under the accession number ERP001775.
+
+To create haplotype bams run the follwoing command for each chromosome bam `split_by_haplotype.py [-h] -s SAMPLE_NAME -c CHR_NO -b BAM_FILE -r REF_FILE -n SNP_FILE -i INDEL_FILE  [-x CHR_PREFIX]`. An example command could look like `python split_by_haplotype.py -s NA12878 -c 20 -b NA12878_chr20_small.bam -r chr20.fa -n IlluminaPlatinumSNPs-PG-staging-V4-all.vcf.gz -i IlluminaPlatinumINDELs-PG-staging-V4-all.vcf.gz`.
+
 
 ## Usage
 HapMix uses the following input files 
