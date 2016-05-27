@@ -111,7 +111,7 @@ def get_commandline_options():
 
     import argparse
 
-    parser = argparse.ArgumentParser(prog='HapMix v0.6')
+    parser = argparse.ArgumentParser(prog='HapMix v0.7')
     required_arguments = parser.add_argument_group('Required arguments (-t and -b mutually exclusive!)')
     required_arguments.add_argument("-c", "--sim_config_file", dest="sim_config_file", help="configuration file containing the HapMix simulation parameters")
     truth_file_args = required_arguments.add_mutually_exclusive_group(required=True)
