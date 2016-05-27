@@ -6,7 +6,7 @@ polyclonal tumour samples. tHapMix utilizes phased sequencing data, where
 individual germline variants are split into haplotypes providing
 chromosome-specific coverage and allele tracks. By sampling from such high
 coverage tracks one can simulate copy number variants, SNVs and other features of
-tumour samples such as ploidy, purity and heterogeneity. In particular, the following  features can be altered to recreate specific types of tumor evolution:
+tumour samples such as ploidy, purity and heterogeneity. In particular, the following  features can be altered to recreate specific types of tumour evolution:
 
 1. Number of clones 
 
