@@ -189,17 +189,17 @@ cd bin
 submitHapMix.py -c ../example/example.json -t ../example/example.bed  -o ./examplerun
 ```
 ### Full demo
-This demo will show how to perform full tHapMix simulation followed by CNV identification and analysis of the results. 
+This demo will show how to perform full tHapMix simulation followed by CNV identification and analysis of the results. Supporting files for this demo can also be found in example subfolder.
 ##### tHapMixsimulation. 
 For this simulation we will use an annotated truth set for pseudo-haploid genome (```GeL004flt.bed```) that has a ploidy of 1.6 and approximately 200 copy number changes and no LOH. NA12882 haplotype bams will be used as read input.  In addition, we will simulate the following sample and genome properties as encoded in sim_param.json file (entire configuration file for the demo can be found in ):
 * Percentage of heterogeneous variants set to 70% ("var_het": 70.0)
 * Purity set to 80% ("purity": 80.0)
 * Sample with two clones ("num_clones": 2,)
 * Abundance of major clone 60% ("perc_maj": 50.0)
-With these input parameters the tHapMix simulation can be launched as ```/python bin/submitHapMix.py -t config/GeL004flt.bed -c ../simGeL004flt_n2_m70_v70.json -o ../simGeL004flt_n2_m70_v70 -m local```
+With these input parameters the tHapMix simulation can be launched as ```/python bin/submitHapMix.py -t config/GeL004flt.bed -c ../simGeL004flt_n2_m60_v70.json -o ../simGeL004flt_n2_m60_v70 -m local```
 
 ##### Canvas CNV calling.
-tHapMix run will generate bam file in the output directory specified. We could assess simulated copy number changes by using a CNV calling tool. We use Canvas in this demo. Full documentation can be accessed at https://github.com/Illumina/Canvas. Here here we show example command line as applied to tHapMix output.
+tHapMix run will generate bam file in the output directory specified. We could assess simulated copy number changes by using a CNV calling tool. We use Canvas in this demo. Full documentation can be accessed at https://github.com/Illumina/Canvas. Here here we show example command line as applied to tHapMix output. An already tHapMix pre-generated example bams are available for download from https://basespace.illumina.com/s/zkWcr91RIdLG: Analyses/bams subdirectory contains simulated tumour and normal bams, while Analyses/utils - SNV calls in vcf formal in the normal sample.
 ```
 Canvas.exe Somatic-WGS 
 --bam = path to tHapMix bam
@@ -208,9 +208,9 @@ Canvas.exe Somatic-WGS
 --genome-folder = UCSC/hg19/Sequence/WholeGenomeFasta
 --filter-bed = UCSC/hg19/Annotation/Canvas/filter13.bed' (flagged region to be skipped, i.e. centromeres)
 --output 
---b-allele-vcf NA12882-50x-TR2-p1_S1_30x.vcf.gz (vcf containing SNV b-allele sitesonly sites with PASS in the filter column will be used)
-custom-parameters=CanvasSomaticCaller,-t= var_perc_* bed file in output tHapMix folder with copy numbers and poylconality levels of simulated variants 
+--b-allele-vcf normal.vcf.gz (vcf containing SNV b-allele sitesonly sites with PASS in the filter column will be used)
 ```
+
 
 ##References
 [1] Abecasis,G. et al. (2002) Merlin - rapid analysis of dense genetic maps using sparse gene flow trees. Nat Genet., 20, 97-101.
