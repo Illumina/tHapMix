@@ -1,0 +1,29 @@
+{
+    "somatic_vcf": "/illumina/scratch/tmp/users/sivakhno/HapMixEnterprise/HapMix/config/somatic.snvs.vcf",
+    "mutate_sv": true,
+    "tmp_dir": "/illumina/scratch/bioinfoSD/HapMix/part3/simGeL004flt_n2_m50_v100/Tmp",
+    "clones_perc": {
+        "MajCl": 0.5,
+        "A": 0.5
+    },
+    "hg_file": "/illumina/scratch/tmp/users/sivakhno/HapMixEnterprise/HapMix/config/human.hg19.genome",
+    "haplotyped_bam_dir": "/illumina/build/curium/builds/CNeval/haplotyped_bams/NA12882/TR1_V4dtb",
+    "create_truth_bed": false,
+    "num_clones": 1,
+    "purity": 80.0,
+    "clones": [
+        "MajCl",
+        "A"
+    ],
+    "chromosomes": "all",
+    "name_maj_clone": "MajCl",
+    "tum_truth_file": "/bioinfoSD/users/sergii/HapMix/configs/GeL004flt.bed",
+    "output_dir": "/illumina/scratch/bioinfoSD/HapMix/part3/simGeL004flt_n2_m50_v100",
+    "output_bam_file": "sample",
+    "ploidy_depth": 60,
+    "mode": "local",
+    "bam_depth": 174,
+    "perc_heterogeneous_variants": -1,
+    "tree_format": "random_binary",
+    "perc_majority_clone": -1
+}
