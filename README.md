@@ -17,6 +17,8 @@ tumour samples such as ploidy, purity and heterogeneity. In particular, the foll
 4. Percentage of private (heterogeneous) variants
 
 tHapMix can be used for software benchmarking, model training and in-silico analysis of tumour evolutionary mechanisms.
+
+Examples of tHapMix data can be downloaded from https://basespace.illumina.com/projects/30822795 .
  
 ## License
 
