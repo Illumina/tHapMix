@@ -25,7 +25,7 @@ else:
 sequence={}
 for s in HTSeq.FastaReader(ref_file):
     sequence[s.name]=s
-reference_seq=sequence["chr"+str(chr_no)]
+reference_seq=sequence[args.chr_prefix+str(chr_no)]
 pos_ref=0
 samfile = pysam.Samfile(bam_file,"rb")
 
