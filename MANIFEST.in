@@ -1,0 +1,6 @@
+include *.py
+recursive-include scripts *.py *.R
+recursive-include example *.bed *.json
+recursive-include config *.bed *.json *.vcf *.genome *.sam
+recursive-include pyflow *.md *.py *.txt
+

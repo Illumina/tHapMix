@@ -21,6 +21,7 @@ def get_HapMix_params():
     params.output_dir = options.output_dir
     params.tmp_dir = options.tmp_dir
     params.mode = options.mode
+    params.rand_seed = options.rand_seed
 
     # Truth file configuration
     if options.truth_config_file:
@@ -41,13 +42,10 @@ def parse_truth_config_file(truth_config_file, params):
 
     config = json.load(open(truth_config_file))
 
-    # Parameters defining the truth bed file to be created
-    params.num_var_min = config["num_var_min"]
-    params.num_var_max = config["num_var_max"]
-    params.size_var_min = config["size_var_min"]
-    params.size_var_max = config["size_var_max"]
-    params.cn_min = config["cn_min"]
-    params.cn_max = config["cn_max"]
+    params.CN_distr_file  = config["CN_distr_file"]
+    params.MCC_distr_file = config["MCC_distr_file"]
+    params.num_distr_file = config["num_distr_file"]
+    params.len_distr_file = config["len_distr_file"]
     params.tum_truth_file = os.path.join(params.output_dir, config["truth_file_name"])
 
 
@@ -55,6 +53,7 @@ def parse_truth_config_file(truth_config_file, params):
 def parse_sim_config_file(sim_config_file, params):
     """Parse HapMix configuration file for the simulation parameters into params object"""
 
+    print sim_config_file
     config = json.load(open(sim_config_file))
     config_dir = os.path.dirname(os.path.realpath(sim_config_file))
 
@@ -69,10 +68,7 @@ def parse_sim_config_file(sim_config_file, params):
         params.var_het = config["perc_heterogeneous_variants"]
     params.tree_format = config["tree_format"]
     validate_tree_structure(params.tree_format, params.num_clones)
-    if params.tree_format in ["random_binary", "random_single_level"]:
-        if "tree_seed" in config:
-            params.tree_seed = config["tree_seed"]
-    elif isinstance(params.tree_format, (list, tuple)):
+    if isinstance(params.tree_format, (list, tuple)):
         params.tree_structure_file = os.path.join(params.tmp_dir, "tree_structure.json")
         json.dump(params.tree_format, open(params.tree_structure_file, "w"))
         if params.num_clones != 1:
@@ -90,7 +86,10 @@ def parse_sim_config_file(sim_config_file, params):
     params.haplotyped_bam_dir = config["haplotyped_bam_dir"]
     params.output_bam_file = config["output_bam_file"]
     params.mutate_sv = config["mutate_sv"]
-    params.somatic_vcf = os.path.join(config_dir, config["somatic_vcf"])
+    if params.mutate_sv:
+        params.somatic_vcf = os.path.join(config_dir, config["somatic_vcf"])
+    else:
+        params.somatic_vcf = ""
     params.hg_file = os.path.join(config_dir, config["hg_file"])
     params.bam_depth = config["bam_depth"]
     params.ploidy_depth = config["ploidy_depth"]
@@ -111,7 +110,7 @@ def get_commandline_options():
 
     import argparse
 
-    parser = argparse.ArgumentParser(prog='HapMix v0.7')
+    parser = argparse.ArgumentParser(prog='tHapMix v1.0')
     required_arguments = parser.add_argument_group('Required arguments (-t and -b mutually exclusive!)')
     required_arguments.add_argument("-c", "--sim_config_file", dest="sim_config_file", help="configuration file containing the HapMix simulation parameters")
     truth_file_args = required_arguments.add_mutually_exclusive_group(required=True)
@@ -119,6 +118,7 @@ def get_commandline_options():
     truth_file_args.add_argument("-t", "--tumor_truth_file", dest="tum_truth_file", help="name of the tumor truth file\n(existing truth file is used)")
     required_arguments.add_argument("-o", "--output_dir", dest="output_dir", help="name of the output directory")
     required_arguments.add_argument('-m', '--mode', dest='mode', default='local', choices=['sge', 'local'], help="select run mode (local|sge)")
+    parser.add_argument("--seed", dest="rand_seed", help="Seed for random number generation", default = None, type=int)
     options = parser.parse_args()
 
     if not options.sim_config_file:
@@ -137,7 +137,14 @@ def get_commandline_options():
         parser.print_help()
         print("\nTumor truth bed file does not exist\n")
         sys.exit(2)
-
+    # check for samtools and bedtools dependencies      
+    if not which("samtools"):
+        print("\n samtools package must be installed in the PATH, run sudo apt-get install samtools or alternative!\n")
+        sys.exit(2)        
+    if not which("bedtools"):
+        print("\n bedtools package must be installed in the PATH, run sudo apt-get install bedtools or alternative!\n")
+        sys.exit(2)    
+        
     if not os.path.exists(options.output_dir):
         os.mkdir(options.output_dir)
     options.tmp_dir = os.path.join(options.output_dir, "Tmp")

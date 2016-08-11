@@ -11,12 +11,12 @@ def get_commandline_options():
     parser.add_option("-t", "--tum_truth_file", dest="tum_truth_file", type="string", help="truth file")
     parser.add_option("-c", "--clones", dest="clones", type="string", action="append", help="names of the clones")
     parser.add_option("-u", "--tree_structure_file", dest="tree_file", type="string", help="tree structure file for fixed tree format")
-    parser.add_option("-e", "--random_tree_seed", dest="tree_seed", type="int", help="seed to initialize generation of random tree (optional)")
     parser.add_option("-v", "--perc_heterogeneous_variants", dest="var_het", type="float", help="percentage of heterogeneous variants")
     parser.add_option("-m", "--mutate_somatic_variants", dest="mut_som_snv", action="store_true", default=False, help="add clonal somatic variants")
     parser.add_option("-s", "--somatic_snv_file", dest="som_snv_file", type="string", default="", help="name of the somatic snvs file")
     parser.add_option("-o", "--output_dir", dest="output_dir", type="string", help="name of the output directory")
     parser.add_option("-g", "--genome", dest="hg_file", type="string", help="genome file")
+    parser.add_option("--seed", dest="rand_seed", type="int", help="seed to initialize generation of random tree (optional)")
     (options, args) = parser.parse_args()
 
     if len(args) > 0:
@@ -37,7 +37,7 @@ def get_commandline_options():
         sys.exit(2)
     if options.tree_format=="random_binary" and options.tree_file:
         print "Tree structure file specified for random tree: file will be disregarded\n"
-    if options.tree_format=="fixed" and options.tree_seed:
+    if options.tree_format=="fixed" and options.rand_seed:
         print "Seed specified for fixed tree: value will be disregarded\n"
     if options.mut_som_snv and not os.path.exists(options.som_snv_file):
         print "Somatic snv file does not exist\n"
@@ -46,6 +46,8 @@ def get_commandline_options():
     options.output_BED = os.path.join(options.output_dir, os.path.basename(options.tum_truth_file)[:-4] + "_clone")
     if options.mut_som_snv:
         options.output_VCF = os.path.join(options.output_dir, os.path.basename(options.som_snv_file)[:-4] + "_clone")
+    else:
+        options.output_VCF = ""
 
     return options
 
@@ -53,7 +55,6 @@ def get_commandline_options():
 def build_random_binary_clonal_tree(tree, seed=None):
     """Build a random binary clonal evolutionary tree from a list of clones"""
 
-    import random
     if seed: random.seed(seed)
     while len(tree) > 1:
         ix = random.sample(range(0, len(tree)), 2)
@@ -64,23 +65,23 @@ def build_random_binary_clonal_tree(tree, seed=None):
     return tree[0]
 
 
-def pre_order(binary_tree_node, prev_node_file, tot_vars, num_ss, base_output_file_name, format):
+def pre_order(binary_tree_node, prev_node_file, tot_vars, num_ss, base_output_file_name, format, seed):
     """Visit binary clonal evolutionary tree and subsample variants"""
 
     if isinstance(binary_tree_node, (list, tuple)) and len(binary_tree_node) > 1:
         print binary_tree_node
-        pre_order(binary_tree_node[0], subsample_rows(binary_tree_node[0], prev_node_file, tot_vars, num_ss, base_output_file_name, format), tot_vars, num_ss, base_output_file_name, format)
-        pre_order(binary_tree_node[1], subsample_rows(binary_tree_node[1], prev_node_file, tot_vars, num_ss, base_output_file_name, format), tot_vars, num_ss, base_output_file_name, format)
+        pre_order(binary_tree_node[0], subsample_rows(binary_tree_node[0], prev_node_file, tot_vars, num_ss, base_output_file_name, format, seed), tot_vars, num_ss, base_output_file_name, format, seed)
+        pre_order(binary_tree_node[1], subsample_rows(binary_tree_node[1], prev_node_file, tot_vars, num_ss, base_output_file_name, format, seed), tot_vars, num_ss, base_output_file_name, format, seed)
 
 
-def visit_non_binary_tree(tree, root_file, tot_vars, num_ss, base_output_file_name, format):
+def visit_non_binary_tree(tree, root_file, tot_vars, num_ss, base_output_file_name, format, seed):
     """Visit non-binary, 1-level clonal evolutionary tree and subsample variants"""
 
     for tree_node in tree:
-        subsample_rows(tree_node, root_file, tot_vars, num_ss, base_output_file_name, format)
+        subsample_rows(tree_node, root_file, tot_vars, num_ss, base_output_file_name, format, seed)
 
 
-def subsample_rows(node, prev_file_name, tot_rows, num_ss, base_output_file_name, format):
+def subsample_rows(node, prev_file_name, tot_rows, num_ss, base_output_file_name, format, seed=None):
     """Subsample variants from tumor truth file or from somatic snv file at each node of the clonal evolutionary tree"""
 
     if prev_file_name is "": # root node
@@ -88,6 +89,7 @@ def subsample_rows(node, prev_file_name, tot_rows, num_ss, base_output_file_name
     else:
         with open(prev_file_name, "r") as prev_file:
             curr_rows = [r.strip() for r in prev_file.readlines()]
+    if seed: random.seed(seed)
 
     print len(tot_rows)
     print num_ss
@@ -115,7 +117,7 @@ def write_normal_BED_file(hg_file, base_output_BED_name):
             bed.writelines("\n".join(bed_lines))
 
 
-def write_clonal_files(clones, tree, var_het, tum_truth_file, output_BED, mut_som_snv, som_snv_file, output_VCF, output_dir, hg_file):
+def write_clonal_files(clones, tree, var_het, tum_truth_file, output_BED, mut_som_snv, som_snv_file, output_VCF, output_dir, hg_file, seed):
     """Write truth files (and optionally snv files) for each clone"""
 
     num_clones = len(clones)
@@ -171,12 +173,12 @@ def write_clonal_files(clones, tree, var_het, tum_truth_file, output_BED, mut_so
                 tot_rows = [r.strip() for r in input.readlines()]
         num_vars_tot = len(tot_rows)
 
-        root_file = subsample_rows(tree, "", tot_rows, int(math.floor(perc_ss_root*num_vars_tot)), file_out, format)
+        root_file = subsample_rows(tree, "", tot_rows, int(math.floor(perc_ss_root*num_vars_tot)), file_out, format, seed)
         if num_clones > 1:
             if tree_structure == "binary":
-                pre_order(tree, root_file, tot_rows, int(math.floor(perc_ss*num_vars_tot)), file_out, format)
+                pre_order(tree, root_file, tot_rows, int(math.floor(perc_ss*num_vars_tot)), file_out, format, seed)
             elif tree_structure == "single_level":
-                visit_non_binary_tree(tree, root_file, tot_rows, int(math.floor(perc_ss*num_vars_tot)), file_out, format)
+                visit_non_binary_tree(tree, root_file, tot_rows, int(math.floor(perc_ss*num_vars_tot)), file_out, format, seed)
 
         # Remove old and temporary files
         pattern = os.path.basename(file_out) + "(.*)" + format + "$"
@@ -197,13 +199,14 @@ def main():
     if opt.tree_format == "fixed":
         tree = json.load(open(opt.tree_file))
     elif opt.tree_format == "random_binary":
-        tree =  build_random_binary_clonal_tree(opt.clones[:], opt.tree_seed)
+        tree =  build_random_binary_clonal_tree(opt.clones[:], opt.rand_seed)
     elif opt.tree_format == "random_single_level":
         tree =  opt.clones
 
     # Write clonal truth files
     write_clonal_files(opt.clones, tree, opt.var_het, opt.tum_truth_file, opt.output_BED,
-                       opt.mut_som_snv, opt.som_snv_file, opt.output_VCF, opt.output_dir, opt.hg_file)
+                       opt.mut_som_snv, opt.som_snv_file, opt.output_VCF,
+                       opt.output_dir, opt.hg_file, opt.rand_seed)
 
 
 

@@ -7,14 +7,13 @@ def get_commandline_options():
     from optparse import OptionParser
 
     parser = OptionParser()
-    parser.add_option("-n", "--num_variants_min", dest="num_var_min", type="int", help="minimum number of variants in each chromosome")
-    parser.add_option("-m", "--num_variants_max", dest="num_var_max", type="int", help="maximum number of variants in each chromosome")
-    parser.add_option("-s", "--size_variants_min", dest="size_var_min", type="int", help="minimum size of variants")
-    parser.add_option("-t", "--size_variants_max", dest="size_var_max", type="int", help="maximum size of variants")
-    parser.add_option("-c", "--cn_min", dest="cn_min", type="int", help="minimum copy number")
-    parser.add_option("-d", "--cn_max", dest="cn_max", type="int", help="maximum copy number")
-    parser.add_option("-o", "--output_filename", dest="output_BED", help="name of the output tumor truth file")
+    parser.add_option("-c", "--CN_distr_filename", dest="CN_distr_json", help="Distribution of copy numbers json file")
+    parser.add_option("-m", "--MCC_distr_filename", dest="MCC_distr_json", help="Distribution of major chromosome counts json file")
+    parser.add_option("-n", "--num_distr_filename", dest="num_distr_json", help="Distribution of number of variants json file")
+    parser.add_option("-l", "--len_distr_filename", dest="len_distr_json", help="Distribution of variant lengths json file")
+    parser.add_option("-o", "--output_filename", dest="output_BED", help="output tumor truth file")
     parser.add_option("-g", "--genome", dest="hg_file", type="string", help="genome file")
+    parser.add_option("--seed", dest="rand_seed", help="Seed for random number generation", default=None, type=int)
     (options, args) = parser.parse_args()
 
     if len(args) > 0:
@@ -29,39 +28,82 @@ def get_commandline_options():
     return options
 
 
-def write_tumor_BED_file(output_BED, num_var_min, num_var_max, size_var_min, size_var_max, cn_min, cn_max, hg_file):
+def get_tumour_CNVs_distr(num_freq_file, CN_distr_file, MCC_cond_distr_file, len_freq_file, hg_file, seed=None):
     """Write tumor truth file"""
 
-    with open(hg_file) as hgf:
-        hg = dict([line.strip().split("\t") for line in hgf])
-    print hg
+    import json, numpy
 
-    print output_BED
+    with open(hg_file) as hgf:
+        hg = dict([(line.strip().split("\t")[0], float(line.strip().split("\t")[1])) for line in hgf if line.strip().split("\t")[0] not in ["chrM", "chrX", "chrY"]])
+    if seed:
+        numpy.random.seed(seed)
+
+    vars_dict = {}
+    with open(num_freq_file) as num_file:
+        num_distr = json.load(num_file)
+    with open(CN_distr_file) as CN_file:
+        CN_distr = json.load(CN_file)
+    with open(MCC_cond_distr_file) as MCC_file:
+        MCC_distr = json.load(MCC_file)
+    with open(len_freq_file) as len_file:
+        len_distr = json.load(len_file)
+
+    tot = int(float(numpy.random.choice(num_distr.keys(), p=num_distr.values())))
+    print tot
+
+    num = 0
+    while (num < tot):
+
+        CN = numpy.random.choice(CN_distr.keys(), p=CN_distr.values())
+        if not CN in MCC_distr:
+            continue
+        MCC = numpy.random.choice(MCC_distr[CN].keys(), p=MCC_distr[CN].values())
+        CN_hapA, CN_hapB = int(MCC), int(CN) - int(MCC)
+        if numpy.random.random() < 0.5:
+            CN_hapA, CN_hapB = CN_hapB, CN_hapA
+
+        # pick random chr
+        chr_id = numpy.random.choice(hg.keys(), p=[clen/sum(hg.values()) for clen in hg.values()])
+        chr_len = int(hg[chr_id])
+        start = numpy.random.randint(1, chr_len)
+        var_len = int(float(numpy.random.choice(len_distr.keys(), p=len_distr.values())))
+        end = start + var_len
+
+        # check if var is longer than chromosome
+        if end > chr_len:
+            continue
+
+        if not chr_id in vars_dict:
+            vars_dict[chr_id] = [(start, end, CN_hapA, CN_hapB)]
+            num += 1
+        else:
+            for chr_var in vars_dict[chr_id]:
+                # check if new var overlaps with any of the existing vars
+                if (end >= chr_var[0] and end <= chr_var[1]) or (start >= chr_var[0] and start <= chr_var[1] or (start <= chr_var[0] and end >= chr_var[1])):
+                    break
+            else:
+                vars_dict[chr_id].append((start, end, CN_hapA, CN_hapB))
+                num += 1
+
+    return vars_dict
+
+
+def write_tumor_BED_file(output_BED, vars_dict):
+    """Write tumor truth file"""
+
     with open(output_BED, "w") as out:
-        lines = []
-        for chr_id in ["chr" + str(num) for num in range(1,23)]:
-            len_chr = int(hg[chr_id])
-            print len_chr
-            num_var = numpy.random.randint(num_var_min, num_var_max+1)
-            start = sorted(numpy.random.randint(1, len_chr+1, num_var))
-            next = [x-1 for x in start[1:]] + [len_chr]
-            for s, n in zip(start, next):
-                size = numpy.random.randint(size_var_min, size_var_max+1)
-                cnA = numpy.random.randint(cn_min, cn_max+1)
-                if cnA == 0:
-                    cnB = numpy.random.randint(max(1, cn_min), cn_max+1)
-                else:
-                    cnB = numpy.random.randint(cn_min, cn_max+1)
-                lines.append("\t".join([chr_id, str(s), str(min(s+size, n)), str(cnA), str(cnB)]))# + "\n")
-        #lines[-1] = lines[-1].rstrip()
-        out.writelines("\n".join(lines))
+        for chr_id in vars_dict:
+            for var in vars_dict[chr_id]:
+                out.write("\t".join([chr_id] + [str(var_field) for var_field in var]) + "\n")
 
 
 def main():
 
     opts = get_commandline_options()
-    write_tumor_BED_file(opts.output_BED, opts.num_var_min, opts.num_var_max, opts.size_var_min, opts.size_var_max,
-                         opts.cn_min, opts.cn_max, opts.hg_file)
+
+    vars_dict = get_tumour_CNVs_distr(opts.num_distr_json, opts.CN_distr_json , opts.MCC_distr_json, opts.len_distr_json,
+                                      opts.hg_file, opts.rand_seed)
+    write_tumor_BED_file(opts.output_BED, vars_dict)
 
 
 if __name__=="__main__":

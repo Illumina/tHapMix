@@ -7,7 +7,7 @@ import json
 from HapMixUtil import *
 
 ScriptDir=os.path.abspath(os.path.dirname(__file__))
-pyFlowPath=os.path.join(ScriptDir,"../redist","pyflow","src")
+pyFlowPath=os.path.join(ScriptDir,"../pyflow","src")
 sys.path.append(pyFlowPath)
 sys.path.append(ScriptDir)
 from pyflow import WorkflowRunner
@@ -21,15 +21,15 @@ class TumorBEDWorkflow(WorkflowRunner):
 
     def workflow(self):
         createTumorTruthFile = os.path.join(ScriptDir + "/createTumorTruthFile.py")
-        ttTask = "python " + createTumorTruthFile
-        ttTask += " -n %d" % self.params.num_var_min
-        ttTask += " -m %d" % self.params.num_var_max
-        ttTask += " -s %d" % self.params.size_var_min
-        ttTask += " -t %d" % self.params.size_var_max
-        ttTask += " -c %d" % self.params.cn_min
-        ttTask += " -d %d" % self.params.cn_max
-        ttTask += " -o %s" % self.params.tum_truth_file
-        ttTask += " -g %s" % self.params.hg_file
+        ttTask = sys.executable + " " + createTumorTruthFile
+        ttTask += " -c %s" % os.path.join(ScriptDir, self.params.CN_distr_file)
+        ttTask += " -m %s" % os.path.join(ScriptDir, self.params.MCC_distr_file)
+        ttTask += " -n %s" % os.path.join(ScriptDir, self.params.num_distr_file)
+        ttTask += " -l %s" % os.path.join(ScriptDir, self.params.len_distr_file)
+        ttTask += " -o %s" % os.path.join(ScriptDir, self.params.tum_truth_file)
+        ttTask += " -g %s" % os.path.join(ScriptDir, self.params.hg_file)
+        if self.params.rand_seed:
+            ttTask += " --seed %d" % self.params.rand_seed
         #print(ttTask)
         self.addTask("createTumorTruthFile", ttTask)
 
@@ -43,18 +43,21 @@ class ClonalFilesWorkflow(WorkflowRunner):
 
     def workflow(self):
         createClonalFiles = os.path.join(ScriptDir + "/createClonalFiles.py")
-        ctTask = "python " + createClonalFiles
+        ctTask = sys.executable + " " + createClonalFiles
         if self.params.tree_format in ["random_binary", "random_single_level"]:
             ctTask += " -f %s" % self.params.tree_format
         else:
              ctTask += " -f fixed"
         ctTask += " -t %s" % self.params.tum_truth_file
         ctTask += " -c %s" % " -c ".join(self.params.clones)
-        if hasattr(self.params, "tree_structure_file"): ctTask += " -u %s" % self.params.tree_structure_file
-        if hasattr(self.params, "tree_seed"): ctTask += " -e %d" % self.params.tree_seed
+        if hasattr(self.params, "tree_structure_file"):
+            ctTask += " -u %s" % self.params.tree_structure_file
+        if self.params.rand_seed:
+            ctTask += " --seed %d" % self.params.rand_seed
         ctTask += " -v %f" % self.params.var_het
-        if self.params.mutate_sv: ctTask += " -m"
-        ctTask += " -s %s" % self.params.somatic_vcf
+        if self.params.mutate_sv:
+            ctTask += " -m"
+            ctTask += " -s %s" % self.params.somatic_vcf
         ctTask += " -o %s" % self.params.output_dir
         ctTask += " -g %s" % self.params.hg_file
         #print(ctTask)
@@ -69,8 +72,7 @@ class RunHapMixWorkflow(WorkflowRunner):
 
     def workflow(self):
 
-        samtools=os.path.join(ScriptDir,"../redist","samtools-1.2/samtools")
-
+        samtools="samtools"
 
         # Truth files names
         clone_truth_file = {}
@@ -90,7 +92,7 @@ class RunHapMixWorkflow(WorkflowRunner):
         for clID, perc in self.params.clones_perc.items():
                 clone_ploidy_depth[clID] = round(self.params.ploidy_depth * perc * (self.params.purity/100), 2)
         norm_ploidy_depth = round((self.params.ploidy_depth * (1 - self.params.purity/100)), 2)
-        # # Write clone ploidy depths to files
+        # Write clone ploidy depths to files
         with open(os.path.join(self.params.tmp_dir, "ploidy_depths.txt"), "w") as pl_file:
                 pl_file.writelines(["Overall ploidy: %.2f\n" % overall_ploidy, "Ploidy depth: %.2f\n" % self.params.ploidy_depth])
                 pl_file.writelines(["Clone {}: {}\n".format(k, str(v)) for (k, v) in clone_ploidy_depth.items()] + ["Norm : " + str(norm_ploidy_depth) + "\n"])
@@ -101,17 +103,17 @@ class RunHapMixWorkflow(WorkflowRunner):
 
         else:
 
+            # Merge clonal BED files
+            merged_bed = merge_clonal_CNs(clone_truth_file, self.params.clones_perc, self.params.purity, self.params.tmp_dir)
+
             # Get header and chromosome X, Y, M bam files
             header = os.path.join(self.params.tmp_dir, "header.sam")
             self.addTask("getHeader", samtools + " view -H %s/sorted_haplotypeD_chr21.bam -o %s" % (self.params.haplotyped_bam_dir, header))
-            self.addTask("sorted_chrX", samtools + " view -Sb %s -o %s/sorted_%s_chrX.bam" % (header, self.params.output_dir, self.params.output_bam_file), dependencies="getHeader")
-            self.addTask("sorted_chrY", samtools + " view -Sb %s -o %s/sorted_%s_chrY.bam" % (header, self.params.output_dir, self.params.output_bam_file), dependencies="getHeader")
-            self.addTask("sorted_chrM", samtools + " view -Sb %s -o %s/sorted_%s_chrM.bam" % (header, self.params.output_dir, self.params.output_bam_file), dependencies="getHeader")
 
             # Simulate each chromosome
             chrTaskIDs = []
             simulate_copy_number_changes = os.path.join(ScriptDir + "/simulate_copy_number_changes.py")
-
+                              
             chroms = []
             if not isinstance(self.params.chromosomes, (list, tuple)):
                 chroms = range(1,23)
@@ -121,86 +123,46 @@ class RunHapMixWorkflow(WorkflowRunner):
                     if isinstance(i, int):
                         chroms.append(i)
                     else:
-                        sys.exit("chromosomes %s in config file should either be a comma separated integers or a keyword all\n" % params.chromosomes)
+                        sys.exit("chromosomes %s in config file should either be a comma separated integers or a keyword all\n" % self.params.chromosomes)
 
+            # Simulate clones
+            clTaskIDs = []
             for chrID in chroms:
                 chrTaskID = "simChr" + str(chrID)
-
-                # Simulate clones
-                clTaskIDs = []
-                for clID, perc in self.params.clones_perc.items():
-                    clTaskID = chrTaskID + "cl" + clID
-                    clTaskIDs.append(clTaskID)
-                    clTask = sys.executable
-                    clTask += " " + simulate_copy_number_changes
-                    clTask += " -a %s/sorted_haplotypeC_chr%d.bam" % (self.params.haplotyped_bam_dir, chrID)
-                    clTask += " -b %s/sorted_haplotypeD_chr%d.bam" % (self.params.haplotyped_bam_dir, chrID)
-                    clTask += " -o %s/%s_chr%d_cl%s.bam" % (self.params.output_dir, self.params.output_bam_file, chrID, clID)
-                    clTask += " -c chr%d" % (chrID)
-                    clTask += " -t %s" % (clone_truth_file[clID])
-                    clTask += " -m %s" % str(self.params.mutate_sv)
-                    clTask += " -s %s/%s_clone%s.vcf" % (self.params.output_dir, os.path.basename(self.params.somatic_vcf[:-4]), clID)
-                    clTask += " -d %f" % (clone_ploidy_depth[clID])
-                    clTask += " -e %d" % (self.params.bam_depth)
-                    self.addTask(clTaskID, clTask, memMb=2024)
-                    #print(clTask)
-
-                # Simulate normal
-                normTaskID = chrTaskID + "norm"
-                clTaskIDs.append(normTaskID)
-                normTask = sys.executable
-                normTask += " " + simulate_copy_number_changes
-                normTask += " -a %s/sorted_haplotypeC_chr%d.bam" % (self.params.haplotyped_bam_dir, chrID)
-                normTask += " -b %s/sorted_haplotypeD_chr%d.bam" % (self.params.haplotyped_bam_dir, chrID)
-                normTask += " -o %s/%s_chr%d_norm.bam" % (self.params.output_dir, self.params.output_bam_file, chrID)
-                normTask += " -c chr%d" % (chrID)
-                normTask += " -t %s" % norm_truth_file
-                normTask += " -m False"
-                normTask += " -s %s" % (self.params.somatic_vcf)
-                normTask += " -d %f" % (norm_ploidy_depth)
-                normTask += " -e %d" % (self.params.bam_depth)
-                self.addTask(normTaskID, normTask, memMb=2024)
-                #print(normTask)
-
-                # Concatenate clones for the current chromosome
-                catChrTask = samtools + " cat"
-                catChrTask += " -h %s" % header
-                catChrTask += " -o %s/%s_chr%d.bam" % (self.params.output_dir, self.params.output_bam_file, chrID)
-                prefix = " %s/%s_chr%d_" % (self.params.output_dir, self.params.output_bam_file, chrID)
-                catChrTask += " ".join([prefix + "cl" + cl + ".bam" for cl in self.params.clones_perc.keys()])
-                catChrTask += " %s/%s_chr%d_norm.bam" % (self.params.output_dir, self.params.output_bam_file, chrID)
-                self.addTask(chrTaskID + "cat", catChrTask, dependencies=clTaskIDs+["getHeader"])
-                #print(catChrTask)
-
-                # Remove clonal bam files
-                rm_files = []
-                for cl in self.params.clones_perc.keys():
-                    rm_files.append("%s/%s_chr%d_cl%s.bam" % (self.params.output_dir, self.params.output_bam_file, chrID, cl))
-                rm_files.append("%s/%s_chr%d_norm.bam" % (self.params.output_dir, self.params.output_bam_file, chrID))
-                # print "rm " + " ".join(rm_files)
-                self.addTask(chrTaskID + "ClRm", "rm " + " ".join(rm_files), dependencies=(chrTaskID + "cat"))
-
-                # Sort chromosome bam files
-                sortChrTask = samtools + " sort"
-                sortChrTask += " %s/%s_chr%d.bam" % (self.params.output_dir, self.params.output_bam_file, chrID)
-                sortChrTask += " -T %s/sorted_%s_chr%d" % (self.params.output_dir, self.params.output_bam_file, chrID)
-                sortChrTask += " -o %s/sorted_%s_chr%d.bam" % (self.params.output_dir, self.params.output_bam_file, chrID)
-                self.addTask(chrTaskID + "sort", sortChrTask, dependencies=(chrTaskID + "cat"))
-                #print(sortChrTask)
-                chrTaskIDs.append(chrTaskID + "sort")
-
-                # Remove unsorted bam files
-                # print "rm %s/%s_chr%d.bam" % (self.params.output_dir, self.params.output_bam_file, chrID)
-                self.addTask(chrTaskID + "UnsortedRm", "rm %s/%s_chr%d.bam" % (self.params.output_dir, self.params.output_bam_file, chrID), dependencies=(chrTaskID + "sort"))
+                clTaskID = chrTaskID + "clones"
+                clTaskIDs.append(clTaskID)
+                clTask = sys.executable
+                clTask += " " + simulate_copy_number_changes
+                clTask += " -a %s/sorted_haplotypeC_chr%d.bam" % (self.params.haplotyped_bam_dir, chrID)
+                clTask += " -b %s/sorted_haplotypeD_chr%d.bam" % (self.params.haplotyped_bam_dir, chrID)
+                clTask += " -o %s/%s_chr%d.bam" % (self.params.output_dir, self.params.output_bam_file, chrID)
+                clTask += " -c chr%d" % (chrID)
+                clTask += " -t %s" % (merged_bed)
+                if self.params.mutate_sv:
+                    tmpClone = " -s "
+                    tmpPerc  = " -p "
+                    template_VCF = os.path.join(self.params.output_dir, os.path.basename(self.params.somatic_vcf)[:-4] + "_clone")
+                    for clone in self.params.clones:
+                        tmpClone += template_VCF + clone + ".vcf "
+                        tmpPerc += str(self.params.clones_perc[clone]) + " "   
+                    clTask += " -m "   
+                    clTask += tmpClone[:-1]         
+                    clTask += tmpPerc[:-1]   
+                clTask += " -d %f" % (self.params.ploidy_depth/2.0)
+                clTask += " -e %d" % (self.params.bam_depth)
+                if self.params.rand_seed:
+                    clTask += " --seed %d" % (self.params.rand_seed)
+                self.addTask(clTaskID, clTask, memMb = 2024)
+                print(clTask)
 
             # Concatenate chromosome bam files
             catTask = samtools + " cat"
             catTask += " -h %s" % header
             catTask += " -o %s/sorted_%s_som_var.bam " % (self.params.output_dir, self.params.output_bam_file)
-            prefix = "%s/sorted_%s_chr" % (self.params.output_dir, self.params.output_bam_file)
-            chr_names = ["M"] + [str(i) for i in chroms] + ["X", "Y"]
+            prefix = "%s/%s_chr" % (self.params.output_dir, self.params.output_bam_file)
+            chr_names = [str(i) for i in chroms]
             catTask += " ".join([prefix + c + ".bam" for c in chr_names])
-            self.addTask("catBamFiles", catTask, dependencies=chrTaskIDs)
+            self.addTask("catBamFiles", catTask, dependencies=clTaskIDs+["getHeader"])
             # self.addTask("catBamFiles", catTask)
             # print(catTask)
 
@@ -223,11 +185,11 @@ class ReportClonalVariantsWorkflow(WorkflowRunner):
 
     def workflow(self):
 
-        def calc_tot_var_perc(sim_dir):
+        def calc_tot_var_perc(sim_dir, params_file):
             """For a single simulation: for each variant in the truth file, calculate total percentage of sample with it (variant heterogeneity)"""
 
             vars = {}
-            with open("%s/sim_param.json" % sim_dir) as sim_param:
+            with open(params_file) as sim_param:
                 clones_perc = json.load(sim_param)["clones_perc"]
 
             for clone, perc in clones_perc.items():
@@ -242,10 +204,10 @@ class ReportClonalVariantsWorkflow(WorkflowRunner):
             return vars
 
 
-        def create_var_perc_file(sim_dir, out_file, no_dipl):
+        def create_var_perc_file(sim_dir, params_file, out_file, no_dipl):
             """For a single simulation: write bed file with variants percentages"""
 
-            vars =  calc_tot_var_perc(sim_dir)
+            vars =  calc_tot_var_perc(sim_dir, params_file)
             if out_file is None:
                 out_file = os.path.join(sim_dir, "var_perc_" + os.path.basename(sim_dir) + ".bed")
             with open(out_file, "w") as perc_bed:
@@ -256,11 +218,11 @@ class ReportClonalVariantsWorkflow(WorkflowRunner):
             return out_file
 
 
-        def create_het_cn_file(sim_dir, out_file, no_dipl, hap_split=False, round=False):
+        def create_het_cn_file(sim_dir, params_file, out_file, no_dipl, hap_split=False, round=False):
             """Calculate variant heterogeneous CN from variant percentage file (hetCN_var = perc_var*CN_var + (1-perc_var)*2"""
 
             import math
-            vars =  calc_tot_var_perc(sim_dir)
+            vars =  calc_tot_var_perc(sim_dir, params_file)
             if out_file is None:
                 out_file = os.path.join(sim_dir, "het_cn_" + os.path.basename(sim_dir) + ".bed")
             with open(out_file, "w") as cn_bed:
@@ -276,8 +238,8 @@ class ReportClonalVariantsWorkflow(WorkflowRunner):
                             cn = str(cnA + cnB)
                         cn_bed.write("\t".join([chr_id, start, end, cn]) + "\n")
             return out_file
-        create_var_perc_file(self.params.output_dir, None, True)
-        create_het_cn_file(self.params.output_dir, None, self.params.purity, True)
+        create_var_perc_file(self.params.output_dir, self.params.params_file, None, True)
+        create_het_cn_file(self.params.output_dir, self.params.params_file, None, self.params.purity, True)
 
 
 class SimFullWorkflow(WorkflowRunner):
@@ -332,7 +294,8 @@ class SimFullWorkflow(WorkflowRunner):
                 new_gf.writelines([chr_line for chr_line in curr_gf if chr_line.strip().split("\t")[0] in chr_names])
 
         # Write parameters of current simulation to file
-        with open(self.params.output_dir + "/sim_param.json", "w") as par_file:
+        self.params.params_file = os.path.join(self.params.output_dir, "used_simulation_params.json")
+        with open(self.params.params_file, "w") as par_file:
             json.dump(vars(self.params), par_file, indent=4, separators=(',', ': '))
 
         # Run simulation

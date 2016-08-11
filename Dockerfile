@@ -10,6 +10,9 @@ RUN apt-get install cython -y
 RUN apt-get install python-setuptools -y
 RUN apt-get install python-pip -y
 RUN apt-get install python-numpy -y
+RUN apt-get install bedtools -y
+RUN apt-get install python-scipy -y
+RUN apt-get install samtools -y
 # ideally, we don't want to use the ubuntu version
 # here because this bloats the Docker image
 # RUN apt-get install python-pandas -y
@@ -32,13 +35,12 @@ RUN pip install --upgrade numpy
 RUN apt-get install zlib1g-dev
 RUN pip install pysam
 RUN pip install bx-python
+RUN pip install HTseq
 RUN apt-get clean -y
 
 # copy git repository into the image
-RUN mkdir -p /opt/hapmix
-COPY . /opt/hapmix/
+RUN mkdir -p /opt/thapmix
+COPY . /opt/thapmix/
 
 # run HapMix installer in the image
-WORKDIR /opt/hapmix/redist
-RUN make
-WORKDIR /opt/hapmix/
+WORKDIR /opt/thapmix/
