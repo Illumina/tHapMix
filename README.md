@@ -59,7 +59,7 @@ pip install -r requirements.txt
 pip install HapMix-*.tar.gz -t $THAPMIXDIR --install-option="--install-data=$THAPMIXDIR"
 ```
 
-This will also install all the dependencies. After this tHapMix can be launched by a simple command
+This will also install all the dependencies (python-dev might need to be installed as well). After this tHapMix can be launched by a simple command
 
 ```bash
 python $THAPMIXDIR/bin/submitHapMix.py -h
