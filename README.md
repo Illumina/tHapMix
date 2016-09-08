@@ -18,9 +18,6 @@ tHapMix: simulating tumour samples through haplotype mixtures
 Sergii Ivakhno; Camilla Colombo; Stephen Tanner; Philip Tedder; Stefano Berri; Anthony J. Cox
 Bioinformatics 2016; doi: 10.1093/bioinformatics/btw589.
 
-http://bioinformatics.oxfordjournals.org/cgi/content/abstract/btw589?
-ijkey=dazwWzDT5U0pmmi&keytype=ref 
-
 ## Description
 tHapMix is a lightweight simulation engine that generates somatic copy number
 and SNV variants on different cancer evolutionary trees to produce diverse
