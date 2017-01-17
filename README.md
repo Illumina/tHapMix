@@ -132,9 +132,9 @@ The Dockerfile which is included in the top level directory of the tHapMix sourc
      - sudo docker build   -t thapmix ./ # build docker image 
 
 2. Usage 
-     - Register (if needed) for BaseSpace and open https://basespace.illumina.com/s/Tty7T2ppH3Tr
+     - Register (if needed) for BaseSpace and open https://basespace.illumina.com/s/zkWcr91RIdLG 
      
-     - The required files are available in this subfolder https://basespace.illumina.com/analyses/30880851/files/28484471?projectId=18065049
+     - The required files are available in this subfolder https://basespace.illumina.com/analyses/40050021/files/36670657?projectId=30822795
      
      - copy sorted_haplotypeC_chr21.bam, sorted_haplotypeC_chr22.bam, sorted_haplotypeD_chr21.bam, sorted_haplotypeD_chr22.bam plus corresponding bam indices into  /tmp/tHapMix/haplotyped_bams
      
@@ -163,7 +163,7 @@ Phased Haplotype SNV and indel variants from Platinum Genomes (PG) project (http
 
 2)     Variants are called in all replicates.
 
-The splitting procedure generated a separate bam file for each of chromosomal haplotypes (i.e. 48 files taking a total of 300G of disk space). These can be downloaded from BaseSpace: https://basespace.illumina.com/s/Tty7T2ppH3Tr (exact folder location: https://basespace.illumina.com/analyses/30880851/files/28484471?projectId=18065049). A **BaseMount** command line interface for BaseSpace could be used for file downloading: details accessible from here **https://basemount.basespace.illumina.com**. 
+The splitting procedure generated a separate bam file for each of chromosomal haplotypes (i.e. 48 files taking a total of 300G of disk space). These can be downloaded from BaseSpace: https://basespace.illumina.com/s/zkWcr91RIdLG  (exact folder location: https://basespace.illumina.com/analyses/40050021/files/36670657?projectId=30822795). A **BaseMount** command line interface for BaseSpace could be used for file downloading: details accessible from here **https://basemount.basespace.illumina.com**. 
 
 It is possible to regenerate your own haplotype bams by using `split_by_haplotype.py` under `scripts/haplobams/` directory. To use it install the following Python package dependencies with `pip install [packagename]: pysam, numpy, HTSeq, subprocess` and make sure HTSlib is available in the `$PATH` (follow installation instructions in http://www.htslib.org/download). Once installed, `split_by_haplotype.py` will require the following files:
 - phased SNV calls for Platinum Genome samples: available for download from tHapMix release 
