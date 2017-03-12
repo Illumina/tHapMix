@@ -1,10 +1,14 @@
 {
-    "num_var_min": 5,
-    "num_var_max": 5,
-    "size_var_min": 10000,
-    "size_var_max": 100000,
-    "cn_min": 0,
-    "cn_max": 2,
+    "CN_distr_file" : "../config/varsimconfig/CN_freq.json",
+	"MCC_distr_file" : "../config/varsimconfig/MCC_cond_freq.json",
+	"num_distr_file" : "../config/varsimconfig/num_freq.json",
+	"len_distr_file" : "../config/varsimconfig/len_freq.json",
     "truth_file_name": "MyTumor.bed",
     "chromosomes": "all"
 }
+
+
+
+
+
+
