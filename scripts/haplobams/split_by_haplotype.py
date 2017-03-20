@@ -25,12 +25,12 @@ else:
 sequence={}
 for s in HTSeq.FastaReader(ref_file):
     sequence[s.name]=s
-reference_seq=sequence["chr"+str(chr_no)]
+reference_seq=sequence[args.chr_prefix+str(chr_no)]
 pos_ref=0
 samfile = pysam.Samfile(bam_file,"rb")
 
-haplotyped_snp_file=subprocess.Popen(['tabix',snp_file,chr_no ],stdout=subprocess.PIPE)
-haplotyped_indel_file=subprocess.Popen(['tabix',indel_file,chr_no ],stdout=subprocess.PIPE)
+haplotyped_snp_file=subprocess.Popen(['tabix', "--print-header", snp_file, chr_no ],stdout=subprocess.PIPE)
+haplotyped_indel_file=subprocess.Popen(['tabix', "--print-header", indel_file, chr_no ],stdout=subprocess.PIPE)
 
 
 #d={'hc':0,'hd':0,'bt':0,'ot':0,'rf':0,'fr':0}
@@ -112,16 +112,23 @@ def main():
 def read_in_vcf(vcf_file):
     cd={'haplotypeC':{},'haplotypeD':{}}
     csdl={}
-
+    samples=None
     for line in vcf_file.stdout:
-        if re.match('#',line):
+        line = line.strip()
+        if not line or line.startswith("##"):
             continue
-        if not re.search('bwa',line) and not re.search('isaac',line): # ONLY TRUST ISAAC & BWA BASED CALLS
+        elif line.startswith("#CHROM"):
+            samples=line[1:].split()[9:] #get the sample names from the VCF
+            continue
+        elif not re.search('bwa',line) and not re.search('isaac',line): # ONLY TRUST ISAAC & BWA BASED CALLS
             continue
         else:
+            if samples is None:
+                raise Exception("Need #CHROM line in VCF file with sample names listed!")
+            parts = line.strip().split('\t')
+            (chrom,pos,id,ref,alt,qual,filter,info,format) = parts[:9]
+            sample_dict = dict(zip(samples, parts[9:])) #dictionary mapping sample_name -> sample_data
             
-            
-            (chrom,pos,id,ref,alt,qual,filter,info,format,NA12877,NA12878,NA12879,NA12880,NA12881,NA12882,NA12883,NA12884,NA12885,NA12886,NA12887,NA12888,NA12889,NA12890,NA12891,NA12892,NA12893)=line.strip().split('\t')
             
             if re.match('chr',chr) and not re.match('chr',chrom):
                 chrom='chr'+chrom
@@ -129,7 +136,7 @@ def read_in_vcf(vcf_file):
                 continue
             pos=int(float(pos))
             format_columns=format.split(':') #JUST GENOTYPE AND EDIT DISTANCE
-            format_columns_data=eval(sample_name).split(':')
+            format_columns_data=sample_dict[sample_name].split(':')
             f_dict={}
             for i,k in enumerate(format_columns):
                f_dict[k]=format_columns_data[i]
