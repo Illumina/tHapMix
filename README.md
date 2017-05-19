@@ -44,7 +44,7 @@ Examples of tHapMix data can be downloaded from https://basespace.illumina.com/p
 tHapMix source code is provided under the [GPLv3 license] (LICENSE.txt).
 
 
-##System Requirements: 
+## System Requirements: 
 
 tHapMix uses the pyFlow workflow engine for parallel execution. It requires at least 8G of RAM for the whole-genome simulation, however for the high-coverage whole-genome simulation a multi-core / cluster system configuration is advisable. We tested and report runtime for the following configurations (80x whole-genome BAM):
 - 4.5h on a Linux node with 8 CPUs and 60G RAM
