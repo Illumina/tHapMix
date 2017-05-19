@@ -223,7 +223,7 @@ Other configuration parameters for config/.json include:
  * hg_file: ("/path/to/genomes/human.hg19.genome")
  
 
-##Output: 
+## Output: 
 After tHapMix run output_dir contains the following files and subdirectories
  * Simulated tumour bam file
  * _clone{A}.bed - location and copy numbers of variants provate to clone {A}, etc.
@@ -232,8 +232,9 @@ After tHapMix run output_dir contains the following files and subdirectories
  * pyflow.data/logs/ - log files
  * pyflow.data/state/ - commands used
 
-##Examples
-###Small example
+## Examples
+
+### Small example
 Use config file in example subfolder for a simplified test run. Only chromosomes 21 and 22 will be simulated. For this you will need to create a haplotyped_bams directory directly under tHapMix installation and copy haplotype bams and bam indices for chromosome 21 and 22 into it. Then run
 ```
 cd bin
@@ -272,7 +273,7 @@ Canvas.exe Somatic-WGS
 ```
 
 
-##References
+## References
 [1] Abecasis,G. et al. (2002) Merlin - rapid analysis of dense genetic maps using sparse gene flow trees. Nat Genet., 20, 97-101.
 
 [2] McKenna,A. et al. (2010) The Genome Analysis Toolkit: a MapReduce framework for analyzing next-generation DNA sequencing data. Genome Res., 20, 1297-1303.
