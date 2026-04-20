@@ -41,7 +41,7 @@ Examples of tHapMix data can be downloaded from https://basespace.illumina.com/p
  
 ## License
 
-tHapMix source code is provided under the [GPLv3 license] (LICENSE.txt).
+tHapMix source code is provided under the [PolyForm Strict License 1.0.0 ](https://github.com/Illumina/tHapMix/blob/master/LICENSE.txt)
 
 
 ##System Requirements: 
